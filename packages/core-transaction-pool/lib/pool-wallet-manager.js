@@ -120,11 +120,11 @@ module.exports = class PoolWalletManager extends WalletManager {
         logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: voted/unvoted delegate does not exist`, JSON.stringify(data))
         throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: voted/unvoted delegate does not exist`)
 
-      } else if (asset.votes[0].slice(0, 1) === '+' && sender.voted) {
+      } else if (asset.votes[0].slice(0, 1) === '+' && sender.vote) {
         logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender has an acitve vote. Need to unvote first`, JSON.stringify(data))
         throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender has an acitve vote. Need to unvote first`)
 
-      } else if (asset.votes[0].slice(0, 1) === '-' && !sender.voted) {
+      } else if (asset.votes[0].slice(0, 1) === '-' && !sender.vote) {
         logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender doesn't have an active vote`, JSON.stringify(data))
         throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender doesn't have an active vote`)
 
