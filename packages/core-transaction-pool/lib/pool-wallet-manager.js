@@ -114,11 +114,25 @@ module.exports = class PoolWalletManager extends WalletManager {
       throw new Error(`PoolWalletManager: Can't apply transaction ${data.id}: delegate name already taken`)
 
     // NOTE: We use the vote public key, because vote transactions have the same sender and recipient
-    } else if (type === TRANSACTION_TYPES.VOTE && !database.walletManager.walletsByPublicKey[asset.votes[0].slice(1)]) {
+    } else if (type === TRANSACTION_TYPES.VOTE) {
+      const delegate = database.walletManager.walletsByPublicKey[asset.votes[0].slice(1)]
+      if (!delegate) {
+        logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: voted/unvoted delegate does not exist`, JSON.stringify(data))
+        throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: voted/unvoted delegate does not exist`)
 
-      logger.error(`PoolWalletManager: Vote transaction sent by ${sender.address}`, JSON.stringify(data))
-      throw new Error(`PoolWalletManager: Can't apply transaction ${data.id}: voted/unvoted delegate does not exist`)
+      } else if (asset.votes[0].slice(0, 1) === '+' && sender.voted) {
+        logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender has an acitve vote. Need to unvote first`, JSON.stringify(data))
+        throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender has an acitve vote. Need to unvote first`)
 
+      } else if (asset.votes[0].slice(0, 1) === '-' && !sender.voted) {
+        logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender doesn't have an active vote`, JSON.stringify(data))
+        throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender doesn't have an active vote`)
+
+      } else if (!delegate.username) {
+        logger.error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender voted for a non-delegate wallet`, JSON.stringify(data))
+        throw new Error(`PoolWalletManager: Can't apply vote transaction ${data.id}: sender voted for a non-delegate wallet`)
+
+      }
     } else if (config.network.exceptions[data.id]) {
 
       logger.warn('Transaction forcibly applied because it has been added as an exception:', data)
